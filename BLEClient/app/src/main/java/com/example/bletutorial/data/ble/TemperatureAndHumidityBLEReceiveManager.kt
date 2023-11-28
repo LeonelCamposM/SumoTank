@@ -100,17 +100,11 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                // Services have been discovered successfully.
-                coroutineScope.launch {
-                    data.emit(Resource.Loading(message = "Services Discovered."))
-                }
-
                 // Proceed to find and write to the characteristic...
                 val characteristic = findCharacteristics(TANK_SERVICE_UUID, TANK_CONTROL_CHARACTERISTICS_UUID)
                 if (characteristic != null) {
-                    writeCharacteristic( "f");
                     coroutineScope.launch {
-                        data.emit(Resource.Loading(message = "f requested"))
+                        data.emit(Resource.Success(data = TempHumidityResult(0f,0f,ConnectionState.Connected)))
                     }
                 } else {
                     coroutineScope.launch {
