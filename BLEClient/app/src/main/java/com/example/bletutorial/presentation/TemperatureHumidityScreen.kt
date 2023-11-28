@@ -1,6 +1,7 @@
 package com.example.bletutorial.presentation
 
 import android.bluetooth.BluetoothAdapter
+import android.view.MotionEvent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -26,7 +27,9 @@ import com.example.bletutorial.presentation.permissions.SystemBroadcastReceiver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -177,21 +180,26 @@ fun GamePadScreen(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ControlButton(text: String, onStartClick: () -> Unit, onStopClick: () -> Unit) {
     Button(
-        onClick = {  onStartClick() },
+        onClick = { /* Este click se deja vacío porque el manejo se hace con onTouch */ },
         modifier = Modifier
             .size(80.dp)
             .padding(5.dp)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
+            .pointerInteropFilter {
+                when (it.action) {
+                    MotionEvent.ACTION_DOWN -> {
                         onStartClick()
-                        tryAwaitRelease()
-                        onStopClick()
+                        true
                     }
-                )
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        onStopClick()
+                        true
+                    }
+                    else -> false
+                }
             }
     ) {
         Text(text)
