@@ -14,5 +14,5 @@ interface TemperatureAndHumidityReceiveManager {
     fun startReceiving()
 
     fun closeConnection()
-
+    fun writeCharacteristic(command: String)
 }

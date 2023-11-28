@@ -24,9 +24,9 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
     private val context: Context
 ) : TemperatureAndHumidityReceiveManager {
 
-    private val DEVICE_NAME = "Jinou_Sensor_HumiTemp"
-    private val TEMP_HUMIDITY_SERVICE_UIID = "0000aa20-0000-1000-8000-00805f9b34fb"
-    private val TEMP_HUMIDITY_CHARACTERISTICS_UUID = "0000aa21-0000-1000-8000-00805f9b34fb"
+    private val DEVICE_NAME = "BLE TANK"
+    private val TANK_SERVICE_UUID  = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+    private val TANK_CONTROL_CHARACTERISTICS_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
     override val data: MutableSharedFlow<Resource<TempHumidityResult>> = MutableSharedFlow()
 
@@ -99,75 +99,44 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            with(gatt){
-                printGattTable()
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                // Services have been discovered successfully.
                 coroutineScope.launch {
-                    data.emit(Resource.Loading(message = "Adjusting MTU space..."))
+                    data.emit(Resource.Loading(message = "Services Discovered."))
                 }
-                gatt.requestMtu(517)
-            }
-        }
 
-        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-            val characteristic = findCharacteristics(TEMP_HUMIDITY_SERVICE_UIID, TEMP_HUMIDITY_CHARACTERISTICS_UUID)
-            if(characteristic == null){
-                coroutineScope.launch {
-                    data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
-                }
-                return
-            }
-            enableNotification(characteristic)
-        }
-
-        override fun onCharacteristicChanged(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic
-        ) {
-            with(characteristic){
-                when(uuid){
-                    UUID.fromString(TEMP_HUMIDITY_CHARACTERISTICS_UUID) -> {
-                        //XX XX XX XX XX XX
-                        val multiplicator = if(value.first().toInt()> 0) -1 else 1
-                        val temperature = value[1].toInt() + value[2].toInt() / 10f
-                        val humidity = value[4].toInt() + value[5].toInt() / 10f
-                        val tempHumidityResult = TempHumidityResult(
-                            multiplicator * temperature,
-                            humidity,
-                            ConnectionState.Connected
-                        )
-                        coroutineScope.launch {
-                            data.emit(
-                                Resource.Success(data = tempHumidityResult)
-                            )
-                        }
+                // Proceed to find and write to the characteristic...
+                val characteristic = findCharacteristics(TANK_SERVICE_UUID, TANK_CONTROL_CHARACTERISTICS_UUID)
+                if (characteristic != null) {
+                    writeCharacteristic( "f");
+                    coroutineScope.launch {
+                        data.emit(Resource.Loading(message = "f requested"))
                     }
-                    else -> Unit
+                } else {
+                    coroutineScope.launch {
+                        data.emit(Resource.Error(errorMessage = "Control characteristic not found"))
+                    }
+                }
+            } else {
+                coroutineScope.launch {
+                    data.emit(Resource.Error(errorMessage = "Service discovery failed"))
                 }
             }
         }
-
-
     }
-
-
-
-    private fun enableNotification(characteristic: BluetoothGattCharacteristic){
-        val cccdUuid = UUID.fromString(CCCD_DESCRIPTOR_UUID)
-        val payload = when {
-            characteristic.isIndicatable() -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
-            characteristic.isNotifiable() -> BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-            else -> return
-        }
-
-        characteristic.getDescriptor(cccdUuid)?.let { cccdDescriptor ->
-            if(gatt?.setCharacteristicNotification(characteristic, true) == false){
-                Log.d("BLEReceiveManager","set characteristics notification failed")
-                return
+    override fun writeCharacteristic(command: String) {
+        val characteristic = findCharacteristics(TANK_SERVICE_UUID, TANK_CONTROL_CHARACTERISTICS_UUID)
+        characteristic?.let { char ->
+            // Convert the string to UTF-8 bytes
+            char.value = command.toByteArray(Charsets.UTF_8)
+            val writeSuccessful = gatt?.writeCharacteristic(char)
+            if (writeSuccessful == true) {
+                Log.i("BLEReceiveManager", "Successfully wrote command to characteristic.")
+            } else {
+                Log.e("BLEReceiveManager", "Failed to write command to characteristic.")
             }
-            writeDescription(cccdDescriptor, payload)
-        }
+        } ?: Log.e("BLEReceiveManager", "Characteristic not found or not connected to a GATT server.")
     }
-
     private fun writeDescription(descriptor: BluetoothGattDescriptor, payload: ByteArray){
         gatt?.let { gatt ->
             descriptor.value = payload
@@ -203,7 +172,7 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
 
     override fun closeConnection() {
         bleScanner.stopScan(scanCallback)
-        val characteristic = findCharacteristics(TEMP_HUMIDITY_SERVICE_UIID, TEMP_HUMIDITY_CHARACTERISTICS_UUID)
+        val characteristic = findCharacteristics(TANK_SERVICE_UUID, TANK_CONTROL_CHARACTERISTICS_UUID)
         if(characteristic != null){
             disconnectCharacteristic(characteristic)
         }

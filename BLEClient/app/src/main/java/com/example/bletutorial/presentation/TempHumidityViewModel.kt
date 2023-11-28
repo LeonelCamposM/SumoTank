@@ -74,5 +74,7 @@ class TempHumidityViewModel @Inject constructor(
         temperatureAndHumidityReceiveManager.closeConnection()
     }
 
-
+    fun sendCommandToBLEDevice(command: String) {
+        temperatureAndHumidityReceiveManager.writeCharacteristic(command);
+    }
 }

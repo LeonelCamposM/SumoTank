@@ -86,12 +86,7 @@ fun TemperatureHumidityScreen(
             modifier = Modifier
                 .fillMaxWidth(0.6f)
                 .aspectRatio(1f)
-                .border(
-                    BorderStroke(
-                        5.dp, Color.Blue
-                    ),
-                    RoundedCornerShape(10.dp)
-                ),
+                .border(BorderStroke(5.dp, Color.Blue), RoundedCornerShape(10.dp)),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ){
@@ -142,16 +137,14 @@ fun TemperatureHumidityScreen(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-                ){
-                    Text(
-                        text = "Humidity: ${viewModel.humidity}",
-                        style = MaterialTheme.typography.h6
-                    )
-                    Text(
-                        text = "Temperature: ${viewModel.temperature}",
-                        style = MaterialTheme.typography.h6
-                    )
-                }
+                ) {
+
+
+                    // Add a button to send a command
+                    Button(onClick = { viewModel.sendCommandToBLEDevice("f") }) {
+                        Text("F")
+                    }
+                };
             }else if(bleConnectionState == ConnectionState.Disconnected){
                 Button(onClick = {
                     viewModel.initializeConnection()

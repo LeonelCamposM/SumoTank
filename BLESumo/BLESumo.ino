@@ -37,6 +37,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
           stopMovement();
           break;
         default:
+          Serial.println(command);
           break;
       }
     }
@@ -66,6 +67,5 @@ void setup() {
   Serial.println("Starting BLE work!");
 }
 
-void loop(){
-  
+void loop() {
 }
