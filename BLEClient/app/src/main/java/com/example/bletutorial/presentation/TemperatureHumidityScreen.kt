@@ -14,7 +14,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -26,6 +25,8 @@ import com.example.bletutorial.presentation.permissions.PermissionUtils
 import com.example.bletutorial.presentation.permissions.SystemBroadcastReceiver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -77,84 +78,124 @@ fun TemperatureHumidityScreen(
         }
     }
 
+    if(bleConnectionState == ConnectionState.CurrentlyInitializing){
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            CircularProgressIndicator()
+            if(viewModel.initializingMessage != null){
+                Text(
+                    text = viewModel.initializingMessage!!
+                )
+            }
+        }
+    }else if(!permissionState.allPermissionsGranted){
+        Text(
+            text = "Go to the app setting and allow the missing permissions.",
+            style = MaterialTheme.typography.body2,
+            modifier = Modifier.padding(10.dp),
+            textAlign = TextAlign.Center
+        )
+    }else if(viewModel.errorMessage != null){
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+           Text(
+               text = viewModel.errorMessage!!
+           )
+            Button(
+                onClick = {
+                    if(permissionState.allPermissionsGranted){
+                        viewModel.initializeConnection()
+                    }
+                }
+            ) {
+                Text(
+                    "Try again"
+                )
+            }
+        }
+    }else if(bleConnectionState == ConnectionState.Connected){
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            GamePadScreen(viewModel)
+        };
+    }else if(bleConnectionState == ConnectionState.Disconnected){
+        Button(onClick = {
+            viewModel.initializeConnection()
+        }) {
+            Text("Initialize again")
+        }
+    }
+}
+
+@Composable
+fun GamePadScreen(
+    viewModel: TempHumidityViewModel
+) {
     Box(
         modifier = Modifier
             .fillMaxSize(),
         contentAlignment = Alignment.Center
-    ){
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .aspectRatio(1f)
-                .border(BorderStroke(5.dp, Color.Blue), RoundedCornerShape(10.dp)),
-            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            if(bleConnectionState == ConnectionState.CurrentlyInitializing){
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    CircularProgressIndicator()
-                    if(viewModel.initializingMessage != null){
-                        Text(
-                            text = viewModel.initializingMessage!!
-                        )
-                    }
-                }
-            }else if(!permissionState.allPermissionsGranted){
-                Text(
-                    text = "Go to the app setting and allow the missing permissions.",
-                    style = MaterialTheme.typography.body2,
-                    modifier = Modifier.padding(10.dp),
-                    textAlign = TextAlign.Center
-                )
-            }else if(viewModel.errorMessage != null){
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Button container
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                   Text(
-                       text = viewModel.errorMessage!!
-                   )
-                    Button(
-                        onClick = {
-                            if(permissionState.allPermissionsGranted){
-                                viewModel.initializeConnection()
-                            }
-                        }
-                    ) {
-                        Text(
-                            "Try again"
-                        )
-                    }
+                    ControlButton("▲", onStartClick = { viewModel.sendCommandToBLEDevice("f") }, onStopClick = { viewModel.sendCommandToBLEDevice("s") } )
                 }
-            }else if(bleConnectionState == ConnectionState.Connected){
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                Row(
+                    horizontalArrangement = Arrangement.Center
                 ) {
+                    ControlButton("◄", onStartClick = { viewModel.sendCommandToBLEDevice("l") }, onStopClick = { viewModel.sendCommandToBLEDevice("s") } )
+                    ControlButton("📷", onStartClick = {  } , onStopClick = {  } )
+                    ControlButton("►", onStartClick = { viewModel.sendCommandToBLEDevice("r") }, onStopClick = { viewModel.sendCommandToBLEDevice("s") } )
 
-
-                    // Add a button to send a command
-                    Button(onClick = { viewModel.sendCommandToBLEDevice("f") }) {
-                        Text("F")
-                    }
-                };
-            }else if(bleConnectionState == ConnectionState.Disconnected){
-                Button(onClick = {
-                    viewModel.initializeConnection()
-                }) {
-                    Text("Initialize again")
+                }
+                Row(
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    ControlButton("▼", onStartClick = { viewModel.sendCommandToBLEDevice("b") }, onStopClick = { viewModel.sendCommandToBLEDevice("s") } )
                 }
             }
         }
     }
+}
 
+@Composable
+fun ControlButton(text: String, onStartClick: () -> Unit, onStopClick: () -> Unit) {
+    Button(
+        onClick = {  onStartClick() },
+        modifier = Modifier
+            .size(80.dp)
+            .padding(5.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        onStartClick()
+                        tryAwaitRelease()
+                        onStopClick()
+                    }
+                )
+            }
+    ) {
+        Text(text)
+    }
 }
 
 
