@@ -10,6 +10,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -31,9 +33,10 @@ import com.google.accompanist.permissions.MultiplePermissionsState
 @Composable
 fun ControlScreen(
     onBluetoothStateChanged:()->Unit,
-    viewModel: BLEServiceViewModel = hiltViewModel()
+    bleServiceViewModel: BLEServiceViewModel = hiltViewModel(),
+    joystickViewModel: JoystickViewModel = hiltViewModel()
 ) {
-
+    val joystickState by joystickViewModel.joystickState.collectAsState()
     SystemBroadcastReceiver(systemAction = BluetoothAdapter.ACTION_STATE_CHANGED){ bluetoothState ->
         val action = bluetoothState?.action ?: return@SystemBroadcastReceiver
         if(action == BluetoothAdapter.ACTION_STATE_CHANGED){
@@ -44,7 +47,7 @@ fun ControlScreen(
     val permissionState = rememberMultiplePermissionsState(permissions = PermissionUtils.permissions)
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState = lifecycleOwner.lifecycle.currentState
-    val bleConnectionState = viewModel.connectionState
+    val bleConnectionState = bleServiceViewModel.connectionState
 
     fun handleStartEvent(
         bleConnectionState: ConnectionState,
@@ -69,7 +72,7 @@ fun ControlScreen(
         when (lifecycleState) {
             Lifecycle.State.STARTED -> {
                 permissionState.launchMultiplePermissionRequest()
-                handleStartEvent(bleConnectionState, viewModel, permissionState)
+                handleStartEvent(bleConnectionState, bleServiceViewModel, permissionState)
             }
             else -> Unit
         }
@@ -77,20 +80,39 @@ fun ControlScreen(
 
     LaunchedEffect(permissionState.allPermissionsGranted) {
         if (permissionState.allPermissionsGranted && bleConnectionState == ConnectionState.Uninitialized) {
-            viewModel.initializeConnection()
+            bleServiceViewModel.initializeConnection()
         }
     }
 
     DisposableEffect(lifecycleOwner) {
         onDispose {
-            handleStopEvent(bleConnectionState, viewModel)
+            handleStopEvent(bleConnectionState, bleServiceViewModel)
         }
     }
 
+    when (joystickState) {
+        JoystickState.Forward-> Text(
+            text = "Forward",
+        )
+        JoystickState.Backward -> Text(
+            text = "Backward",
+        )
+        JoystickState.Left ->Text(
+            text = "Left",
+        )
+        JoystickState.Right ->Text(
+            text = "Right",
+        )
+        JoystickState.Center ->Text(
+            text = "Center",
+        )
+        else -> Unit
+    }
+
     when (bleConnectionState) {
-        ConnectionState.CurrentlyInitializing -> InitializingUI(viewModel)
-        ConnectionState.Disconnected -> DisconnectedUI(viewModel)
-        ConnectionState.Connected -> ConnectedUI(viewModel)
+        ConnectionState.CurrentlyInitializing -> InitializingUI(bleServiceViewModel)
+        ConnectionState.Disconnected -> DisconnectedUI(bleServiceViewModel)
+        ConnectionState.Connected -> ConnectedUI(bleServiceViewModel)
         else -> Unit
     }
 
@@ -101,19 +123,19 @@ fun ControlScreen(
             modifier = Modifier.padding(10.dp),
             textAlign = TextAlign.Center
         )
-    }else if(viewModel.errorMessage != null){
+    }else if(bleServiceViewModel.errorMessage != null){
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
            Text(
-               text = viewModel.errorMessage!!
+               text = bleServiceViewModel.errorMessage!!
            )
             Button(
                 onClick = {
                     if(permissionState.allPermissionsGranted){
-                        viewModel.initializeConnection()
+                        bleServiceViewModel.initializeConnection()
                     }
                 }
             ) {
