@@ -25,6 +25,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import com.google.accompanist.permissions.MultiplePermissionsState
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -42,55 +43,58 @@ fun ControlScreen(
 
     val permissionState = rememberMultiplePermissionsState(permissions = PermissionUtils.permissions)
     val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleState = lifecycleOwner.lifecycle.currentState
     val bleConnectionState = viewModel.connectionState
 
-    DisposableEffect(
-        key1 = lifecycleOwner,
-        effect = {
-            val observer = LifecycleEventObserver{_,event ->
-                if(event == Lifecycle.Event.ON_START){
-                    permissionState.launchMultiplePermissionRequest()
-                    if(permissionState.allPermissionsGranted && bleConnectionState == ConnectionState.Disconnected){
-                        viewModel.reconnect()
-                    }
-                }
-                if(event == Lifecycle.Event.ON_STOP){
-                    if (bleConnectionState == ConnectionState.Connected){
-                        viewModel.disconnect()
-                    }
-                }
-            }
-            lifecycleOwner.lifecycle.addObserver(observer)
-
-            onDispose {
-                lifecycleOwner.lifecycle.removeObserver(observer)
-            }
-        }
-    )
-
-    LaunchedEffect(key1 = permissionState.allPermissionsGranted){
-        if(permissionState.allPermissionsGranted){
-            if(bleConnectionState == ConnectionState.Uninitialized){
-                viewModel.initializeConnection()
-            }
+    fun handleStartEvent(
+        bleConnectionState: ConnectionState,
+        viewModel: BLEServiceViewModel,
+        permissionState: MultiplePermissionsState
+    ) {
+        if (permissionState.allPermissionsGranted && bleConnectionState == ConnectionState.Disconnected) {
+            viewModel.reconnect()
         }
     }
 
-    if(bleConnectionState == ConnectionState.CurrentlyInitializing){
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(5.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            CircularProgressIndicator()
-            if(viewModel.initializingMessage != null){
-                Text(
-                    text = viewModel.initializingMessage!!
-                )
-            }
+    fun handleStopEvent(
+        bleConnectionState: ConnectionState,
+        viewModel: BLEServiceViewModel
+    ) {
+        if (bleConnectionState == ConnectionState.Connected) {
+            viewModel.disconnect()
         }
-    }else if(!permissionState.allPermissionsGranted){
+    }
+
+    LaunchedEffect(lifecycleState) {
+        when (lifecycleState) {
+            Lifecycle.State.STARTED -> {
+                permissionState.launchMultiplePermissionRequest()
+                handleStartEvent(bleConnectionState, viewModel, permissionState)
+            }
+            else -> Unit
+        }
+    }
+
+    LaunchedEffect(permissionState.allPermissionsGranted) {
+        if (permissionState.allPermissionsGranted && bleConnectionState == ConnectionState.Uninitialized) {
+            viewModel.initializeConnection()
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        onDispose {
+            handleStopEvent(bleConnectionState, viewModel)
+        }
+    }
+
+    when (bleConnectionState) {
+        ConnectionState.CurrentlyInitializing -> InitializingUI(viewModel)
+        ConnectionState.Disconnected -> DisconnectedUI(viewModel)
+        ConnectionState.Connected -> ConnectedUI(viewModel)
+        else -> Unit
+    }
+
+    if(!permissionState.allPermissionsGranted){
         Text(
             text = "Go to the app setting and allow the missing permissions.",
             style = MaterialTheme.typography.body2,
@@ -118,20 +122,44 @@ fun ControlScreen(
                 )
             }
         }
-    }else if(bleConnectionState == ConnectionState.Connected){
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            GamePadScreen(viewModel)
-        };
-    }else if(bleConnectionState == ConnectionState.Disconnected){
-        Button(onClick = {
-            viewModel.initializeConnection()
-        }) {
-            Text("Initialize again")
+    }
+}
+
+
+@Composable
+fun InitializingUI(viewModel: BLEServiceViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        CircularProgressIndicator()
+        if(viewModel.initializingMessage != null){
+            Text(
+                text = viewModel.initializingMessage!!
+            )
         }
+    }
+}
+
+@Composable
+fun DisconnectedUI(viewModel: BLEServiceViewModel) {
+    Button(onClick = {
+        viewModel.initializeConnection()
+    }) {
+        Text("Reconectar")
+    }
+}
+
+@Composable
+fun ConnectedUI(viewModel: BLEServiceViewModel) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        GamePadScreen(viewModel)
     }
 }
 
