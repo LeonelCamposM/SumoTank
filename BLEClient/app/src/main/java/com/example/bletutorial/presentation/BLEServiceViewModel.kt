@@ -24,7 +24,9 @@ class BLEServiceViewModel @Inject constructor(
         private set
 
     var connectionState by mutableStateOf<ConnectionState>(ConnectionState.Uninitialized)
-
+    init {
+        subscribeToChanges()
+    }
     private fun subscribeToChanges(){
         viewModelScope.launch {
             bleService.data.collect{ result ->

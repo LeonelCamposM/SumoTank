@@ -3,7 +3,9 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import com.example.bletutorial.model.repository.BLERepository
+import com.example.bletutorial.model.repository.JoystickRepository
 import com.example.bletutorial.model.service.BLEService
+import com.example.bletutorial.model.service.JoystickService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,6 +31,14 @@ object AppModule {
         @ApplicationContext context: Context
     ): BLEService {
         return BLERepository(bluetoothAdapter, context)
+    }
+
+    @Singleton
+    @Provides
+    fun provideJoystickService(
+        @ApplicationContext context: Context
+    ): JoystickService {
+        return JoystickRepository(context)
     }
 
 }

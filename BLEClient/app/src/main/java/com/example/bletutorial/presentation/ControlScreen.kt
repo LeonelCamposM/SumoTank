@@ -1,6 +1,7 @@
 package com.example.bletutorial.presentation
 
 import android.bluetooth.BluetoothAdapter
+import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -10,8 +11,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -19,7 +18,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.example.bletutorial.model.domain.ConnectionState
 import com.example.bletutorial.presentation.permissions.PermissionUtils
 import com.example.bletutorial.presentation.permissions.SystemBroadcastReceiver
@@ -27,6 +25,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import com.example.bletutorial.model.domain.JoystickState
 import com.google.accompanist.permissions.MultiplePermissionsState
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -36,7 +35,6 @@ fun ControlScreen(
     bleServiceViewModel: BLEServiceViewModel = hiltViewModel(),
     joystickViewModel: JoystickViewModel = hiltViewModel()
 ) {
-    val joystickState by joystickViewModel.joystickState.collectAsState()
     SystemBroadcastReceiver(systemAction = BluetoothAdapter.ACTION_STATE_CHANGED){ bluetoothState ->
         val action = bluetoothState?.action ?: return@SystemBroadcastReceiver
         if(action == BluetoothAdapter.ACTION_STATE_CHANGED){
@@ -48,6 +46,7 @@ fun ControlScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState = lifecycleOwner.lifecycle.currentState
     val bleConnectionState = bleServiceViewModel.connectionState
+    val joystickState = joystickViewModel.joystickState
 
     fun handleStartEvent(
         bleConnectionState: ConnectionState,
@@ -90,23 +89,19 @@ fun ControlScreen(
         }
     }
 
-    when (joystickState) {
-        JoystickState.Forward-> Text(
-            text = "Forward",
-        )
-        JoystickState.Backward -> Text(
-            text = "Backward",
-        )
-        JoystickState.Left ->Text(
-            text = "Left",
-        )
-        JoystickState.Right ->Text(
-            text = "Right",
-        )
-        JoystickState.Center ->Text(
-            text = "Center",
-        )
-        else -> Unit
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        when (joystickState) {
+            JoystickState.Forward -> Text("f")
+            JoystickState.Backward -> Text("b")
+            JoystickState.Left -> Text("l")
+            JoystickState.Right -> Text("r")
+            JoystickState.Center -> Text("c")
+            else -> Unit
+        }
     }
 
     when (bleConnectionState) {

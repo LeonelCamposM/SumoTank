@@ -1,82 +1,48 @@
 package com.example.bletutorial.presentation
 
 import android.util.Log
-import android.view.InputDevice
 import android.view.MotionEvent
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlin.math.abs
+import androidx.lifecycle.viewModelScope
+import com.example.bletutorial.model.domain.JoystickState
+import com.example.bletutorial.model.service.JoystickService
+import com.example.bletutorial.util.Resource
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class JoystickViewModel : ViewModel() {
-    private val _joystickState = MutableStateFlow<JoystickState>(JoystickState.Initial)
-    val joystickState: StateFlow<JoystickState> = _joystickState.asStateFlow()
-    private fun updateJoystickState(x: Float, y: Float) {
-        val state = when {
-            x == 0f && y == 0f -> JoystickState.Center
-            x < 0 -> JoystickState.Left
-            x > 0 -> JoystickState.Right
-            y < 0 -> JoystickState.Forward
-            y > 0 -> JoystickState.Backward
-            else -> JoystickState.Center
-        }
-        Log.e("Direction:", state.toString())
-        _joystickState.value = state
+@HiltViewModel
+class JoystickViewModel  @Inject constructor (private val joystickService: JoystickService) : ViewModel() {
+    var joystickState by mutableStateOf<JoystickState>(JoystickState.Center)
+    init {
+        subscribeToChanges()
     }
 
-    fun processJoystickInput(
-        event: MotionEvent,
-        historyPos: Int
-    ) {
-        val mInputDevice = event.device
-        val lx = getCenteredAxis(
-            event, mInputDevice,
-            MotionEvent.AXIS_X, historyPos
-        )
-        val rx = getCenteredAxis(
-            event, mInputDevice,
-            MotionEvent.AXIS_Z, historyPos
-        )
-        val ly = getCenteredAxis(
-            event, mInputDevice,
-            MotionEvent.AXIS_Y, historyPos
-        )
-        val ry = getCenteredAxis(
-            event, mInputDevice,
-            MotionEvent.AXIS_RZ, historyPos
-        )
-        val lxFloat = lx as? Float ?: 0f
-        val lyFloat = ly as? Float ?: 0f
-        updateJoystickState(lxFloat, lyFloat)
-    }
+    private fun subscribeToChanges(){
+        viewModelScope.launch {
+            joystickService.data.collect{ result ->
+                when(result){
+                    is Resource.Success -> {
+                        Log.e("change", result.data.joystickState.toString())
+                        joystickState = result.data.joystickState
+                    }
 
-    private fun getCenteredAxis(
-        event: MotionEvent,
-        device: InputDevice, axis: Int, historyPos: Int
-    ): Float  {
-        val range = device.getMotionRange(axis, event.source)
-        if (range != null) {
-            val flat = range.flat
-            val value =
-                if (historyPos < 0) event.getAxisValue(axis) else event.getHistoricalAxisValue(
-                    axis,
-                    historyPos
-                )
-            if (abs(value) > flat) {
-                return value
+                    is Resource.Error -> {
+                        joystickState = JoystickState.Center
+                    }
+                }
             }
         }
-        return 0f
+    }
+
+    fun processJoystickInput(event: MotionEvent,
+                             historyPos: Int){
+        joystickService.processJoystickInput(event,historyPos)
+        Log.e("processes","processes")
     }
 }
 
 
-sealed class JoystickState {
-    object Initial : JoystickState()
-    object Center : JoystickState()
-    object Left : JoystickState()
-    object Right : JoystickState()
-    object Forward : JoystickState()
-    object Backward : JoystickState()
-}

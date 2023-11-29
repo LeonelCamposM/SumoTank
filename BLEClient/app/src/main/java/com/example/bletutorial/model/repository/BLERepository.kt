@@ -6,9 +6,8 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
-import android.util.Log
-import com.example.bletutorial.model.domain.ConnectionState
 import com.example.bletutorial.model.data.BLEResult
+import com.example.bletutorial.model.domain.ConnectionState
 import com.example.bletutorial.model.service.BLEService
 import com.example.bletutorial.util.Resource
 import kotlinx.coroutines.CoroutineScope
