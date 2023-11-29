@@ -126,10 +126,21 @@ class MainActivity : ComponentActivity() {
             event, mInputDevice,
             MotionEvent.AXIS_RZ, historyPos
         )
-        Log.e("LX:", lx.toString() + "")
-        Log.e("LY:", ly.toString() + "")
-        Log.e("RX:", rx.toString() + "")
-        Log.e("RY:", ry.toString() + "")
+
+        val lxFloat = lx as? Float ?: 0f
+        val lyFloat = ly as? Float ?: 0f
+
+        // Determine direction based on LX and LY values
+        val direction = when {
+            lxFloat < 0 -> "Left"
+            lxFloat > 0 -> "Right"
+            lyFloat < 0 -> "Forward"
+            lyFloat > 0 -> "Backward"
+            else -> "Center"
+        }
+
+        // Log the direction
+        Log.e("Direction:", direction)
     }
 
     private fun getCenteredAxis(
