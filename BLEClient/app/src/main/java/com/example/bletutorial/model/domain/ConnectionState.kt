@@ -1,4 +1,4 @@
-package com.example.bletutorial.data
+package com.example.bletutorial.model.domain
 
 sealed interface ConnectionState{
     object Connected: ConnectionState

@@ -2,10 +2,7 @@ package com.example.bletutorial.presentation
 
 import android.bluetooth.BluetoothAdapter
 import android.view.MotionEvent
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
@@ -21,21 +18,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.example.bletutorial.data.ConnectionState
+import com.example.bletutorial.model.domain.ConnectionState
 import com.example.bletutorial.presentation.permissions.PermissionUtils
 import com.example.bletutorial.presentation.permissions.SystemBroadcastReceiver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun TemperatureHumidityScreen(
+fun ControlScreen(
     onBluetoothStateChanged:()->Unit,
-    viewModel: TempHumidityViewModel = hiltViewModel()
+    viewModel: BLEServiceViewModel = hiltViewModel()
 ) {
 
     SystemBroadcastReceiver(systemAction = BluetoothAdapter.ACTION_STATE_CHANGED){ bluetoothState ->
@@ -142,7 +137,7 @@ fun TemperatureHumidityScreen(
 
 @Composable
 fun GamePadScreen(
-    viewModel: TempHumidityViewModel
+    viewModel: BLEServiceViewModel
 ) {
     Box(
         modifier = Modifier
@@ -184,7 +179,7 @@ fun GamePadScreen(
 @Composable
 fun ControlButton(text: String, onStartClick: () -> Unit, onStopClick: () -> Unit) {
     Button(
-        onClick = { /* Este click se deja vacío porque el manejo se hace con onTouch */ },
+        onClick = {  },
         modifier = Modifier
             .size(80.dp)
             .padding(5.dp)

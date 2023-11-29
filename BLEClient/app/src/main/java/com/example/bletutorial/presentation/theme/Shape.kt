@@ -1,4 +1,4 @@
-package com.example.bletutorial.ui.theme
+package com.example.bletutorial.presentation.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes

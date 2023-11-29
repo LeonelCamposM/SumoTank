@@ -18,7 +18,7 @@ fun Navigation(
         }
 
         composable(Screen.TemperatureHumidityScreen.route){
-            TemperatureHumidityScreen(
+            ControlScreen(
                 onBluetoothStateChanged
             )
         }
@@ -28,5 +28,5 @@ fun Navigation(
 
 sealed class Screen(val route:String){
     object StartScreen:Screen("start_screen")
-    object TemperatureHumidityScreen:Screen("temp_humid_screen")
+    object TemperatureHumidityScreen:Screen("control_screen")
 }

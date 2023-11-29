@@ -6,15 +6,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.InputDevice
-import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.bletutorial.presentation.Navigation
-import com.example.bletutorial.ui.theme.BLETutorialTheme
+import com.example.bletutorial.presentation.theme.BLETutorialTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlin.math.abs
 
 
 @AndroidEntryPoint
@@ -40,48 +40,13 @@ class MainActivity : ComponentActivity() {
         showBluetoothDialog()
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        val handled = false
-        if (event.source and InputDevice.SOURCE_GAMEPAD
-            == InputDevice.SOURCE_GAMEPAD
-        ) {
-            if (event.repeatCount == 0) {
-                if (keyCode == 96) Log.e("Taste:", "Square pressed")
-                if (keyCode == 97) Log.e("Taste:", "Cross pressed")
-                if (keyCode == 98) Log.e("Taste:", "Circle pressed")
-            }
-            if (handled) {
-                return true
-            }
-        }
-        return super.onKeyDown(keyCode, event)
-    }
-
-    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        val handled = false
-        if (event.source and InputDevice.SOURCE_GAMEPAD
-            == InputDevice.SOURCE_GAMEPAD
-        ) {
-            if (event.repeatCount == 0) {
-                if (keyCode == 96) Log.e("Taste:", "Square released")
-                if (keyCode == 97) Log.e("Taste:", "X released")
-                if (keyCode == 98) Log.e("Taste:", "Circle released")
-            }
-            if (handled) {
-                return true
-            }
-        }
-        return super.onKeyDown(keyCode, event)
-    }
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
-
 
         // Check that the event came from a game controller
         if (event.source and InputDevice.SOURCE_JOYSTICK ==
             InputDevice.SOURCE_JOYSTICK &&
             event.action == MotionEvent.ACTION_MOVE
         ) {
-
 
             // Process all historical movement samples in the batch
             val historySize = event.historySize
@@ -162,27 +127,27 @@ class MainActivity : ComponentActivity() {
 
             // Ignore axis values that are within the 'flat' region of the
             // joystick axis center.
-            if (Math.abs(value) > flat) {
+            if (abs(value) > flat) {
                 return value
             }
         }
         return 0
     }
 
-    private var isBluetootDialogAlreadyShown = false
+    private var isBluetoothDialogAlreadyShown = false
     private fun showBluetoothDialog(){
         if(!bluetoothAdapter.isEnabled){
-            if(!isBluetootDialogAlreadyShown){
+            if(!isBluetoothDialogAlreadyShown){
                 val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                 startBluetoothIntentForResult.launch(enableBluetoothIntent)
-                isBluetootDialogAlreadyShown = true
+                isBluetoothDialogAlreadyShown = true
             }
         }
     }
 
     private val startBluetoothIntentForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()){ result ->
-            isBluetootDialogAlreadyShown = false
+            isBluetoothDialogAlreadyShown = false
             if(result.resultCode != Activity.RESULT_OK){
                 showBluetoothDialog()
             }

@@ -1,10 +1,9 @@
 package com.example.bletutorial.di
-
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
-import com.example.bletutorial.data.TemperatureAndHumidityReceiveManager
-import com.example.bletutorial.data.ble.TemperatureAndHumidityBLEReceiveManager
+import com.example.bletutorial.model.repository.BLERepository
+import com.example.bletutorial.model.service.BLEService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,13 +22,13 @@ object AppModule {
         return manager.adapter
     }
 
-    @Provides
     @Singleton
-    fun provideTempHumidityReceiveManager(
-        @ApplicationContext context: Context,
-        bluetoothAdapter: BluetoothAdapter
-    ):TemperatureAndHumidityReceiveManager{
-        return TemperatureAndHumidityBLEReceiveManager(bluetoothAdapter,context)
+    @Provides
+    fun provideBLEService(
+        bluetoothAdapter: BluetoothAdapter,
+        @ApplicationContext context: Context
+    ): BLEService {
+        return BLERepository(bluetoothAdapter, context)
     }
 
 }
