@@ -89,6 +89,19 @@ fun ControlScreen(
         }
     }
 
+    LaunchedEffect(joystickState, bleConnectionState) {
+        if (bleConnectionState == ConnectionState.Connected) {
+            when (joystickState) {
+                JoystickState.Forward -> bleServiceViewModel.sendCommandToBLEDevice("f")
+                JoystickState.Backward -> bleServiceViewModel.sendCommandToBLEDevice("b")
+                JoystickState.Left -> bleServiceViewModel.sendCommandToBLEDevice("l")
+                JoystickState.Right -> bleServiceViewModel.sendCommandToBLEDevice("r")
+                JoystickState.Center -> bleServiceViewModel.sendCommandToBLEDevice("s")
+                else -> bleServiceViewModel.sendCommandToBLEDevice("s")
+            }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -100,15 +113,15 @@ fun ControlScreen(
             JoystickState.Left -> Text("l")
             JoystickState.Right -> Text("r")
             JoystickState.Center -> Text("c")
+            else -> Text("c")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        when (bleConnectionState) {
+            ConnectionState.CurrentlyInitializing -> InitializingUI(bleServiceViewModel)
+            ConnectionState.Disconnected -> DisconnectedUI(bleServiceViewModel)
+            ConnectionState.Connected -> ConnectedUI(bleServiceViewModel)
             else -> Unit
         }
-    }
-
-    when (bleConnectionState) {
-        ConnectionState.CurrentlyInitializing -> InitializingUI(bleServiceViewModel)
-        ConnectionState.Disconnected -> DisconnectedUI(bleServiceViewModel)
-        ConnectionState.Connected -> ConnectedUI(bleServiceViewModel)
-        else -> Unit
     }
 
     if(!permissionState.allPermissionsGranted){
