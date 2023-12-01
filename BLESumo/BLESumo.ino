@@ -57,8 +57,6 @@ void setup() {
     CHARACTERISTIC_UUID,
     BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
   pCharacteristic->setValue("Hello World says BLE TANK");
-
-  pSensorCharacteristic->setValue("Inicial");
   pCharacteristic->setCallbacks(new MyCallbacks());
   pService->start();
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();

@@ -145,40 +145,20 @@ class BLERepository @Inject constructor(
 
 
         private fun handleSuccessfulServiceDiscovery(gatt: BluetoothGatt) {
-            gatt.services.forEach { service ->
-                Log.d("BLERepository", "Discovered service: ${service.uuid}")
-                service.characteristics.forEach { characteristic ->
-                    Log.d("BLERepository", "Characteristic: ${characteristic.uuid}")
-                }
-            }
             val characteristic = findCharacteristics(tankServiceUUID, tankControlUUID)
             if (characteristic != null) {
                 emitResult(ResourceStatus.SUCCESS, BLEResult(ConnectionState.Connected, ""))
             } else {
                 emitResult(ResourceStatus.ERROR, message = "Control characteristic not found")
             }
-            val characteristicN = findCharacteristics(tankServiceUUID, tankSensorUUID)
-            if (characteristicN != null) {
-                 Log.d("BLERepository", "Discovered characteristicN: ${tankSensorUUID}")
-            } else {
-                emitResult(ResourceStatus.ERROR, message = "sensor characteristic not found")
-            }
         }
     }
-
 
     override fun writeCharacteristic(command: String) {
         val characteristic = findCharacteristics(tankServiceUUID, tankControlUUID)
         characteristic?.let { char ->
             char.value = command.toByteArray(Charsets.UTF_8)
             gatt?.writeCharacteristic(char)
-        }
-    }
-
-    override fun readSensorCharacteristic() {
-        val characteristic = findCharacteristics(tankServiceUUID, tankSensorUUID)
-        characteristic?.let {
-            gatt?.readCharacteristic(it)
         }
     }
 

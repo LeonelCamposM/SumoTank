@@ -76,8 +76,4 @@ class BLEServiceViewModel @Inject constructor(
         bleService.writeCharacteristic(command);
     }
 
-    fun readSensorCharacteristic() {
-        Log.e("BLERepository", "requesting data ")
-        bleService.readSensorCharacteristic();
-    }
 }
