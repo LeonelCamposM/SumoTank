@@ -26,7 +26,6 @@ class BLERepository @Inject constructor(
     private val deviceName = "BLE TANK"
     private val tankServiceUUID  = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
     private val tankControlUUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-    private val tankSensorUUID = "12345678-1234-1234-1234-123456789abc"
 
     override val data: MutableSharedFlow<Resource<BLEResult>> = MutableSharedFlow()
     private val bleScanner by lazy {
@@ -81,19 +80,6 @@ class BLERepository @Inject constructor(
     private var currentConnectionAttempt = 1
     private var maximumConnectionAttempts = 5
     private val gattCallback = object : BluetoothGattCallback() {
-        override fun onCharacteristicRead(
-            gatt: BluetoothGatt?,
-            characteristic: BluetoothGattCharacteristic?,
-            status: Int
-        ) {
-            if (status == BluetoothGatt.GATT_SUCCESS && characteristic != null) {
-                val data = characteristic.value
-                val dataString = data.toString(Charsets.UTF_8)
-                emitResult(ResourceStatus.SUCCESS, BLEResult(ConnectionState.Connected, dataString))
-            } else {
-                emitResult(ResourceStatus.ERROR, message = "Read characteristic failed")
-            }
-        }
 
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             when {

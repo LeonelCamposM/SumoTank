@@ -27,9 +27,19 @@ class BLEServiceViewModel @Inject constructor(
         private set
 
     var connectionState by mutableStateOf<ConnectionState>(ConnectionState.Uninitialized)
+    var isLaunchedEffectActive by mutableStateOf(false)
+        private set
     init {
         subscribeToChanges()
     }
+    fun activateLaunchedEffect() {
+        isLaunchedEffectActive = true
+    }
+
+    fun deactivateLaunchedEffect() {
+        isLaunchedEffectActive = false
+    }
+
     private fun subscribeToChanges(){
         viewModelScope.launch {
             bleService.data.collect{ result ->
