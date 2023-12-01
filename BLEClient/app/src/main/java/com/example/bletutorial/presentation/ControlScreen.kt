@@ -47,6 +47,7 @@ fun ControlScreen(
     val lifecycleState = lifecycleOwner.lifecycle.currentState
     val bleConnectionState = bleServiceViewModel.connectionState
     val joystickState = joystickViewModel.joystickState
+    val sensorData = bleServiceViewModel.sensorState
 
     fun handleStartEvent(
         bleConnectionState: ConnectionState,
@@ -91,6 +92,7 @@ fun ControlScreen(
 
     LaunchedEffect(joystickState, bleConnectionState) {
         if (bleConnectionState == ConnectionState.Connected) {
+            bleServiceViewModel.readSensorCharacteristic()
             when (joystickState) {
                 JoystickState.Forward -> bleServiceViewModel.sendCommandToBLEDevice("f")
                 JoystickState.Backward -> bleServiceViewModel.sendCommandToBLEDevice("b")
@@ -116,12 +118,11 @@ fun ControlScreen(
             else -> Text("c")
         }
         Spacer(modifier = Modifier.height(16.dp))
-        when (bleConnectionState) {
-            ConnectionState.CurrentlyInitializing -> InitializingUI(bleServiceViewModel)
-            ConnectionState.Disconnected -> DisconnectedUI(bleServiceViewModel)
-            ConnectionState.Connected -> ConnectedUI(bleServiceViewModel)
-            else -> Unit
-        }
+        Text(text =  "No datas-----")
+        Text(text = sensorData ?: "No data")
+        Text(text =  "No datas------")
+        Spacer(modifier = Modifier.height(16.dp))
+
     }
 
     if(!permissionState.allPermissionsGranted){

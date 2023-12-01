@@ -16,4 +16,5 @@ interface BLEService {
 
     fun closeConnection()
     fun writeCharacteristic(command: String)
+    fun readSensorCharacteristic()
 }

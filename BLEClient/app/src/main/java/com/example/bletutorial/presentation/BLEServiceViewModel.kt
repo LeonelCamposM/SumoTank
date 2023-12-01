@@ -1,5 +1,6 @@
 package com.example.bletutorial.presentation
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,6 +23,8 @@ class BLEServiceViewModel @Inject constructor(
 
     var errorMessage by mutableStateOf<String?>(null)
         private set
+    var sensorState by mutableStateOf<String?>(null)
+        private set
 
     var connectionState by mutableStateOf<ConnectionState>(ConnectionState.Uninitialized)
     init {
@@ -33,6 +36,7 @@ class BLEServiceViewModel @Inject constructor(
                 when(result){
                     is Resource.Success -> {
                         connectionState = result.data.connectionState
+                        sensorState = result.data.sensors
                     }
 
                     is Resource.Loading -> {
@@ -70,5 +74,10 @@ class BLEServiceViewModel @Inject constructor(
 
     fun sendCommandToBLEDevice(command: String) {
         bleService.writeCharacteristic(command);
+    }
+
+    fun readSensorCharacteristic() {
+        Log.e("BLERepository", "requesting data ")
+        bleService.readSensorCharacteristic();
     }
 }
