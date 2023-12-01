@@ -100,8 +100,18 @@ fun ControlScreen(
                 JoystickState.Left -> bleServiceViewModel.sendCommandToBLEDevice("l")
                 JoystickState.Right -> bleServiceViewModel.sendCommandToBLEDevice("r")
                 JoystickState.Center -> bleServiceViewModel.sendCommandToBLEDevice("s")
-                else -> bleServiceViewModel.sendCommandToBLEDevice("s")
             }
+        }
+    }
+
+
+    LaunchedEffect(joystickState, bleConnectionState) {
+        while (true) {
+            if (bleConnectionState == ConnectionState.Connected &&
+                joystickState == JoystickState.Center) {
+                bleServiceViewModel.sendCommandToBLEDevice("s")
+            }
+            delay(1000) // Wait for 1 second before checking the state again
         }
     }
 
@@ -111,12 +121,11 @@ fun ControlScreen(
         verticalArrangement = Arrangement.Center
     ) {
         when (joystickState) {
-            JoystickState.Forward -> Text("f")
-            JoystickState.Backward -> Text("b")
-            JoystickState.Left -> Text("l")
-            JoystickState.Right -> Text("r")
-            JoystickState.Center -> Text("s")
-            else -> Text("s")
+            JoystickState.Forward -> Text("forward")
+            JoystickState.Backward -> Text("backward")
+            JoystickState.Left -> Text("left")
+            JoystickState.Right -> Text("right")
+            JoystickState.Center -> Text("stop")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
