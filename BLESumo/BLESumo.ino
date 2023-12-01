@@ -11,7 +11,6 @@ void goBackward();
 void goRight();
 void goLeft();
 void stopMovement();
-BLECharacteristic *pSensorCharacteristic;
 
 class MyCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) override {
@@ -50,7 +49,6 @@ void setup() {
   Serial.begin(115200);
   SetupMotorDriver();
   SetupSensors();
-  SetupCamera();
   Serial.println("Motor driver started");
   BLEDevice::init("BLE TANK");
   BLEServer *pServer = BLEDevice::createServer();
@@ -60,9 +58,6 @@ void setup() {
     BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
   pCharacteristic->setValue("Hello World says BLE TANK");
 
-  pSensorCharacteristic = pService->createCharacteristic(
-    CHARACTERISTIC_UUID_SENSOR,
-    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
   pSensorCharacteristic->setValue("Inicial");
   pCharacteristic->setCallbacks(new MyCallbacks());
   pService->start();
@@ -76,22 +71,4 @@ void setup() {
 }
 
 void loop() {
-  // Get distance from the ultrasonic sensor
-  int distance = getDistance();
-
-  // Check if the line is detected by front and back sensors
-  bool frontLineDetected = isFrontLineDetected();
-  bool backLineDetected = isBackLineDetected();
-
-  // Prepare a string to send via BLE
-  // Format: "Distance: <distance>, Front: <frontLineDetected>, Back: <backLineDetected>"
-  char sensorData[50];
-  sprintf(sensorData, "Distance: %d, Front: %d, Back: %d",
-          distance, frontLineDetected, backLineDetected);
-
-  // Update the BLE characteristic value and notify
-  pSensorCharacteristic->setValue(sensorData);
-  pSensorCharacteristic->notify();
-
-  delay(1000);  // Adjust the delay as needed
 }

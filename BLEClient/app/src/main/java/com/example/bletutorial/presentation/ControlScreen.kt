@@ -28,6 +28,7 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import com.example.bletutorial.model.domain.JoystickState
 import com.google.accompanist.permissions.MultiplePermissionsState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -48,7 +49,6 @@ fun ControlScreen(
     val lifecycleState = lifecycleOwner.lifecycle.currentState
     val bleConnectionState = bleServiceViewModel.connectionState
     val joystickState = joystickViewModel.joystickState
-    val sensorData = bleServiceViewModel.sensorState
 
     fun handleStartEvent(
         bleConnectionState: ConnectionState,
@@ -115,20 +115,10 @@ fun ControlScreen(
             JoystickState.Backward -> Text("b")
             JoystickState.Left -> Text("l")
             JoystickState.Right -> Text("r")
-            JoystickState.Center -> Text("c")
-            else -> Text("c")
+            JoystickState.Center -> Text("s")
+            else -> Text("s")
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text =  "-----------------")
-        Text(text = sensorData ?: "No data")
-        Text(text =  "-----------------")
-        Button(
-            onClick = {
-                bleServiceViewModel.readSensorCharacteristic()
-            }
-        ) {
-            Text("Update Sensor Data")
-        }
+
         Spacer(modifier = Modifier.height(16.dp))
         when (bleConnectionState) {
             ConnectionState.CurrentlyInitializing -> InitializingUI(bleServiceViewModel)
@@ -168,7 +158,6 @@ fun ControlScreen(
         }
     }
 }
-
 
 @Composable
 fun InitializingUI(viewModel: BLEServiceViewModel) {
