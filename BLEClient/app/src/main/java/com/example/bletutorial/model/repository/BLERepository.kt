@@ -179,7 +179,7 @@ class BLERepository @Inject constructor(
         val characteristic = findCharacteristics(tankServiceUUID, tankSensorUUID)
         characteristic?.let {
             gatt?.readCharacteristic(it)
-        } ?: emitResult(ResourceStatus.ERROR, message = "Sensor characteristic not found")
+        }
     }
 
     private fun findCharacteristics(serviceUUID: String, characteristicsUUID:String):BluetoothGattCharacteristic?{

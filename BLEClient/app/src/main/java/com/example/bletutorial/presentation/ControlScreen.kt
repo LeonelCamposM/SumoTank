@@ -27,6 +27,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import com.example.bletutorial.model.domain.JoystickState
 import com.google.accompanist.permissions.MultiplePermissionsState
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -84,6 +85,7 @@ fun ControlScreen(
         }
     }
 
+
     DisposableEffect(lifecycleOwner) {
         onDispose {
             handleStopEvent(bleConnectionState, bleServiceViewModel)
@@ -92,7 +94,6 @@ fun ControlScreen(
 
     LaunchedEffect(joystickState, bleConnectionState) {
         if (bleConnectionState == ConnectionState.Connected) {
-            bleServiceViewModel.readSensorCharacteristic()
             when (joystickState) {
                 JoystickState.Forward -> bleServiceViewModel.sendCommandToBLEDevice("f")
                 JoystickState.Backward -> bleServiceViewModel.sendCommandToBLEDevice("b")
@@ -118,11 +119,23 @@ fun ControlScreen(
             else -> Text("c")
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text =  "No datas-----")
+        Text(text =  "-----------------")
         Text(text = sensorData ?: "No data")
-        Text(text =  "No datas------")
+        Text(text =  "-----------------")
+        Button(
+            onClick = {
+                bleServiceViewModel.readSensorCharacteristic()
+            }
+        ) {
+            Text("Update Sensor Data")
+        }
         Spacer(modifier = Modifier.height(16.dp))
-
+        when (bleConnectionState) {
+            ConnectionState.CurrentlyInitializing -> InitializingUI(bleServiceViewModel)
+            ConnectionState.Disconnected -> DisconnectedUI(bleServiceViewModel)
+            ConnectionState.Connected -> ConnectedUI(bleServiceViewModel)
+            else -> Unit
+        }
     }
 
     if(!permissionState.allPermissionsGranted){
