@@ -4,8 +4,12 @@ import android.bluetooth.BluetoothAdapter
 import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,17 +39,54 @@ fun ControlScreen(
     val joystickState = joystickViewModel.joystickState
 
     LaunchedEffect(joystickState) {
-        when (joystickState) {
-            JoystickState.Forward -> wifiViewModel.goForward()
-            JoystickState.Backward -> wifiViewModel.goBackward()
-            JoystickState.Left -> wifiViewModel.goLeft()
-            JoystickState.Right -> wifiViewModel.goRight()
-            JoystickState.Center -> wifiViewModel.stopMovement()
+        if (wifiViewModel.isLaunchedEffectActive) {
+            when (joystickState) {
+                JoystickState.Forward -> wifiViewModel.goForward()
+                JoystickState.Backward -> wifiViewModel.goBackward()
+                JoystickState.Left -> wifiViewModel.goLeft()
+                JoystickState.Right -> wifiViewModel.goRight()
+                JoystickState.Center -> wifiViewModel.stopMovement()
+            }
         }
     }
     ConnectedUI(wifiViewModel, joystickViewModel)
 }
 
+@Composable
+fun SwitchWithLabel(
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    labelText: String
+) {
+    val colors = MaterialTheme.colors
+    Box(
+        modifier = Modifier
+            .padding(8.dp)
+            .background(colors.primary, shape = RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Switch(
+                checked = isChecked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = colors.primaryVariant, // Color del pulgar cuando está activado
+                    uncheckedThumbColor = Color.DarkGray, // Color del pulgar cuando está desactivado (Gris)
+                    checkedTrackColor = colors.primaryVariant.copy(alpha = 0.5f), // Color de la pista cuando está activado
+                    uncheckedTrackColor = Color.LightGray // Color de la pista cuando está desactivado (Gris claro)
+                )
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = labelText
+            )
+        }
+    }
+}
 @Composable
 fun InitializingUI(viewModel: BLEServiceViewModel) {
     Column(
@@ -170,6 +211,17 @@ fun ConnectedUI(wifiViewModel: WIFIViewModel, joystickViewModel: JoystickViewMod
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
+        SwitchWithLabel(
+            isChecked = wifiViewModel.isLaunchedEffectActive,
+            onCheckedChange = { isChecked ->
+                if (isChecked) {
+                    wifiViewModel.activateLaunchedEffect()
+                } else {
+                    wifiViewModel.deactivateLaunchedEffect()
+                }
+            },
+            labelText = "Control externo"
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = when (joystickViewModel.joystickState) {

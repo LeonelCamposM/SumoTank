@@ -1,4 +1,7 @@
 package com.example.bletutorial.presentation.controlScreen
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bletutorial.model.service.WIFIService
@@ -8,9 +11,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WIFIViewModel @Inject constructor(private val wifiService: WIFIService) : ViewModel() {
-
+    var isLaunchedEffectActive by mutableStateOf(false)
+        private set
     init {
 
+    }
+
+    fun activateLaunchedEffect() {
+        isLaunchedEffectActive = true
+    }
+
+    fun deactivateLaunchedEffect() {
+        isLaunchedEffectActive = false
     }
 
     fun goForward() {
