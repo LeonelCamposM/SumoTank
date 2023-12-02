@@ -1,4 +1,5 @@
 package com.example.bletutorial.di
+import WIFIRepository
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
@@ -6,6 +7,7 @@ import com.example.bletutorial.model.repository.BLERepository
 import com.example.bletutorial.model.repository.JoystickRepository
 import com.example.bletutorial.model.service.BLEService
 import com.example.bletutorial.model.service.JoystickService
+import com.example.bletutorial.model.service.WIFIService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,6 +41,14 @@ object AppModule {
         @ApplicationContext context: Context
     ): JoystickService {
         return JoystickRepository(context)
+    }
+
+    @Singleton
+    @Provides
+    fun provideWIFIService(
+        @ApplicationContext context: Context
+    ): WIFIService {
+        return WIFIRepository(context)
     }
 
 }

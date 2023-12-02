@@ -11,6 +11,7 @@ import com.example.bletutorial.model.data.BLEResult
 import com.example.bletutorial.model.domain.ConnectionState
 import com.example.bletutorial.model.service.BLEService
 import com.example.bletutorial.util.Resource
+import com.example.bletutorial.util.ResourceStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,13 +38,11 @@ class BLERepository @Inject constructor(
     private var gatt: BluetoothGatt? = null
     private var isScanning = false
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
-    enum class ResourceStatus {
-        SUCCESS, ERROR, LOADING
-    }
+
 
     init {
         coroutineScope.launch {
-            data.emit(Resource.Success(data = BLEResult(ConnectionState.Uninitialized, "")))
+            data.emit(Resource.Success(data = BLEResult(ConnectionState.Uninitialized)))
         }
     }
 
@@ -55,7 +54,7 @@ class BLERepository @Inject constructor(
         coroutineScope.launch {
             val resource = when (status) {
                 ResourceStatus.SUCCESS -> Resource.Success(data ?: BLEResult(
-                    ConnectionState.Disconnected, ""
+                    ConnectionState.Disconnected,
                 ))
                 ResourceStatus.ERROR -> Resource.Error(message ?: "Unknown error")
                 ResourceStatus.LOADING -> Resource.Loading(data, message)
@@ -93,13 +92,13 @@ class BLERepository @Inject constructor(
         }
 
         private fun handleConnectionSuccess(gatt: BluetoothGatt) {
-            emitResult(ResourceStatus.SUCCESS, BLEResult(ConnectionState.Connected, ""))
+            emitResult(ResourceStatus.SUCCESS, BLEResult(ConnectionState.Connected))
             gatt.discoverServices()
             this@BLERepository.gatt = gatt
         }
 
         private fun handleDisconnection() {
-            emitResult(ResourceStatus.SUCCESS, BLEResult(ConnectionState.Disconnected, ""))
+            emitResult(ResourceStatus.SUCCESS, BLEResult(ConnectionState.Disconnected))
             gatt?.close()
             gatt = null
         }
@@ -133,7 +132,7 @@ class BLERepository @Inject constructor(
         private fun handleSuccessfulServiceDiscovery(gatt: BluetoothGatt) {
             val characteristic = findCharacteristics(tankServiceUUID, tankControlUUID)
             if (characteristic != null) {
-                emitResult(ResourceStatus.SUCCESS, BLEResult(ConnectionState.Connected, ""))
+                emitResult(ResourceStatus.SUCCESS, BLEResult(ConnectionState.Connected))
             } else {
                 emitResult(ResourceStatus.ERROR, message = "Control characteristic not found")
             }

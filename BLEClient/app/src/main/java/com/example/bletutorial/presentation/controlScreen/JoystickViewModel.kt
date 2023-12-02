@@ -1,4 +1,4 @@
-package com.example.bletutorial.presentation
+package com.example.bletutorial.presentation.controlScreen
 
 import android.util.Log
 import android.view.MotionEvent
@@ -26,8 +26,8 @@ class JoystickViewModel  @Inject constructor (private val joystickService: Joyst
             joystickService.data.collect{ result ->
                 when(result){
                     is Resource.Success -> {
-                        Log.e("change", result.data.joystickState.toString())
-                        joystickState = result.data.joystickState
+                        Log.e("change", result.data?.joystickState.toString())
+                        joystickState = result.data?.joystickState!!
                     }
 
                     is Resource.Error -> {

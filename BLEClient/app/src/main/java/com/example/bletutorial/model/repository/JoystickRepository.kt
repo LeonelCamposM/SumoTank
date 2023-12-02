@@ -8,6 +8,7 @@ import com.example.bletutorial.model.data.JoystickResult
 import com.example.bletutorial.model.domain.JoystickState
 import com.example.bletutorial.model.service.JoystickService
 import com.example.bletutorial.util.Resource
+import com.example.bletutorial.util.ResourceStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,10 +25,6 @@ class JoystickRepository @Inject constructor(
 
     init {
         emitResult(ResourceStatus.SUCCESS,  JoystickResult(JoystickState.Center))
-    }
-
-    enum class ResourceStatus {
-        SUCCESS, ERROR, LOADING
     }
 
     private fun emitResult(

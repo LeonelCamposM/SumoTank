@@ -10,7 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import com.example.bletutorial.presentation.JoystickViewModel
+import com.example.bletutorial.presentation.controlScreen.JoystickViewModel
 import com.example.bletutorial.presentation.Navigation
 import com.example.bletutorial.presentation.theme.BLETutorialTheme
 import dagger.hilt.android.AndroidEntryPoint
