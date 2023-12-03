@@ -1,4 +1,5 @@
 package com.example.bletutorial.presentation.controlScreen
+import android.graphics.Bitmap
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,8 +14,15 @@ import javax.inject.Inject
 class WIFIViewModel @Inject constructor(private val wifiService: WIFIService) : ViewModel() {
     var isLaunchedEffectActive by mutableStateOf(false)
         private set
-    init {
+    var imageBitmap by mutableStateOf<Bitmap?>(null)
+        private set
 
+    init {
+        viewModelScope.launch {
+            wifiService.imageLiveData.observeForever { newBitmap ->
+                imageBitmap = newBitmap
+            }
+        }
     }
 
     fun activateLaunchedEffect() {
@@ -71,5 +79,9 @@ class WIFIViewModel @Inject constructor(private val wifiService: WIFIService) : 
         viewModelScope.launch {
             wifiService.createWebSocketClient()
         }
+    }
+    override fun onCleared() {
+        super.onCleared()
+        wifiService.imageLiveData.removeObserver { /* observer logic here */ }
     }
 }

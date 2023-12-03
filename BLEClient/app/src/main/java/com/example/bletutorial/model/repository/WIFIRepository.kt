@@ -1,6 +1,11 @@
 package com.example.bletutorial.model.repository
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.bletutorial.model.data.WIFIResult
 import com.example.bletutorial.model.service.WIFIService
 import com.example.bletutorial.util.Resource
@@ -18,6 +23,9 @@ class WIFIRepository @Inject constructor(
     private val client = OkHttpClient()
     override val data: MutableSharedFlow<Resource<WIFIResult>> = MutableSharedFlow()
     private var webSocket: WebSocket? = null
+    private val _imageLiveData = MutableLiveData<Bitmap>()
+    override val imageLiveData: LiveData<Bitmap>
+        get() = _imageLiveData
 
     override suspend fun createWebSocketClient() {
         val request = Request.Builder().url("ws://192.168.208.137:81").build()
@@ -29,8 +37,23 @@ class WIFIRepository @Inject constructor(
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 Log.d("WebSocket", "Received message: $text")
-                // Handle incoming messages
+                try {
+                    // Decode the base64 string to a Bitmap
+                    val decodedString = Base64.decode(text, Base64.DEFAULT)
+                    val decodedBitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+
+                    // Check if the bitmap was successfully decoded and post it to the LiveData
+                    decodedBitmap?.let { bitmap ->
+                        _imageLiveData.postValue(bitmap)
+                    } ?: run {
+                        Log.e("WebSocket", "Received string is not a valid base64 encoded image")
+                    }
+                } catch (e: IllegalArgumentException) {
+                    // Handle the case where the text is not a base64 encoded string
+                    Log.e("WebSocket", "Received string is not a valid base64", e)
+                }
             }
+
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d("WebSocket", "Closing: $code / $reason")
@@ -79,4 +102,10 @@ class WIFIRepository @Inject constructor(
     override  suspend fun takeMeasure() {
         val result = sendMessage("measure")
     }
+
+    private fun base64ToBitmap(base64Str: String): Bitmap? {
+        val decodedBytes = Base64.decode(base64Str.substring(base64Str.indexOf(",") + 1), Base64.DEFAULT)
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    }
+
 }

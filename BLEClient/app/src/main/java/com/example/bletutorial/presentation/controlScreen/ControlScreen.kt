@@ -1,7 +1,9 @@
 package com.example.bletutorial.presentation.controlScreen
 
 import android.bluetooth.BluetoothAdapter
+import android.graphics.Bitmap
 import android.view.MotionEvent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,7 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.bletutorial.model.domain.JoystickState
@@ -49,6 +53,7 @@ fun ControlScreen(
             }
         }
     }
+
 
     Column {
         Button(onClick = {
@@ -230,6 +235,16 @@ fun ConnectedUI(wifiViewModel: WIFIViewModel, joystickViewModel: JoystickViewMod
             },
             labelText = "Control externo"
         )
+        val imageBitmap = wifiViewModel.imageBitmap
+
+        if (imageBitmap != null) {
+            Image(
+                bitmap = imageBitmap.asImageBitmap(),
+                contentDescription = "Received Image",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit // This will maintain the aspect ratio
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = when (joystickViewModel.joystickState) {
@@ -249,6 +264,18 @@ fun ConnectedUI(wifiViewModel: WIFIViewModel, joystickViewModel: JoystickViewMod
 
 
 
+@Composable
+fun SizedImageBox(imageBitmap: Bitmap?) {
+    Box(modifier = Modifier.size(width = 200.dp, height = 150.dp)) {
+        imageBitmap?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Received Image",
+                modifier = Modifier.matchParentSize() // This makes the image fill the Box
+            )
+        }
+    }
+}
 
 
 
