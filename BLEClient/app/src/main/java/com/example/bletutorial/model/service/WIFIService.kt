@@ -13,4 +13,5 @@ interface WIFIService {
     suspend fun stopMovement()
     suspend fun takePhoto()
     suspend fun takeMeasure()
+    suspend fun createWebSocketClient()
 }

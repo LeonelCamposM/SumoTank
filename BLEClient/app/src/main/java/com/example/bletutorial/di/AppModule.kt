@@ -1,5 +1,5 @@
 package com.example.bletutorial.di
-import WIFIRepository
+import com.example.bletutorial.model.repository.WIFIRepository
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context

@@ -49,7 +49,15 @@ fun ControlScreen(
             }
         }
     }
-    ConnectedUI(wifiViewModel, joystickViewModel)
+
+    Column {
+        Button(onClick = {
+            wifiViewModel.createWebSocketClient()
+        }) {
+            Text("Reconnection WebSocket")
+        }
+        ConnectedUI(wifiViewModel, joystickViewModel)
+    }
 }
 
 @Composable

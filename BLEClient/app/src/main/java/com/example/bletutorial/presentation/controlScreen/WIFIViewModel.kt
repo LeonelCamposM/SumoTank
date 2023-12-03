@@ -66,4 +66,10 @@ class WIFIViewModel @Inject constructor(private val wifiService: WIFIService) : 
             wifiService.takeMeasure()
         }
     }
+
+    fun createWebSocketClient(){
+        viewModelScope.launch {
+            wifiService.createWebSocketClient()
+        }
+    }
 }
