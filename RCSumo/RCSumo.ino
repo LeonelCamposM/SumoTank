@@ -9,8 +9,8 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 
 // Configuración de IP estática
 IPAddress local_IP(192, 168, 208, 137);  // Cambia esto a la IP deseada
-IPAddress gateway(192, 168, 1, 1);     // Normalmente la IP de tu router
-IPAddress subnet(255, 255, 255, 0);    // Máscara de subred estándar
+IPAddress gateway(192, 168, 1, 1);       // Normalmente la IP de tu router
+IPAddress subnet(255, 255, 255, 0);      // Máscara de subred estándar
 
 
 void handleForward() {
@@ -38,9 +38,9 @@ void handleStop() {
   Serial.println("Stopping");
 }
 
-void handlePhoto() {
+String handlePhoto() {
   Serial.println("Taking photo");
-  takePhoto();
+  return takePhoto();
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length) {
@@ -70,7 +70,10 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
       } else if (command == "stop") {
         handleStop();
       } else if (command == "photo") {
-        handlePhoto();
+        String img = handlePhoto();
+        if (img.length() > 0) {
+          webSocket.sendTXT(num, img);
+        }
       }
 
       break;
@@ -86,7 +89,7 @@ void setup() {
   Serial.println();
   Serial.println();
   Serial.println();
-
+  SetupCamera();
   WiFiMulti.addAP("Carmelo", "Prueba01!");
 
   // Intenta conectarte a las redes WiFi
