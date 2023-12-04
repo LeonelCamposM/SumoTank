@@ -5,38 +5,48 @@ void SetupStrategy() {
 
 void scanForEnemies() {
   unsigned long start = millis();
+  Serial.println("Starting enemy scan");
   while (true) {
-    if (millis() - start >= 2500) {
+    // Verifica si han pasado 6.5 segundos
+    if (millis() - start >= 6500) {
       stop();
       break;
     }
+
     int distance = getDistance();
-    if (distance <= 40) {
-      stop();
+    Serial.println(distance);
+    if (distance <= 80) {
+      digitalWrite(LED_BUILTIN, LOW);
+      moveForward(255);
       break;
     } else {
-      turnLeft(150);
+      digitalWrite(LED_BUILTIN, HIGH);
+      turnRight(120);
     }
-    delay(1);
   }
 }
 
-
 void execute() {
-  if (isFrontLineDetected() || isBackLineDetected()) {
-    Serial.println("stop");
+  int distance = getDistance();
+  Serial.print("Front distance: ");
+  Serial.println(distance);
+
+  if ((isFrontLineDetected() || isBackLineDetected()) && distance > 80) {
     stop();
+    Serial.println("Line detected, stopping and moving backward");
     moveBackward(255);
     delay(800);
     scanForEnemies();
   } else {
-    int distance = getDistance();
-    if (distance <= 40) {
+
+    if (distance <= 80) {
       digitalWrite(LED_BUILTIN, LOW);
       moveForward(255);
+      Serial.println("Distance <= 80, moving forward fast");
     } else {
       digitalWrite(LED_BUILTIN, HIGH);
-      moveForward(150);
+      moveForward(180);
+      Serial.println("Distance > 80, moving forward slow");
     }
   }
 }
