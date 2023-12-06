@@ -1,5 +1,8 @@
+
 #include "esp_camera.h"
-#include <base64.h>
+#include <WiFi.h>
+const char* ssid = "ARRIS-3952";
+const char* password = "Ottis2315";  //Enter WIFI Password
 
 #define CAMERA_MODEL_XIAO_ESP32S3
 #define PWDN_GPIO_NUM -1
@@ -20,6 +23,9 @@
 #define HREF_GPIO_NUM 47
 #define PCLK_GPIO_NUM 13
 
+extern String WiFiAddr = "";
+
+void startCameraServer();
 
 void SetupCamera() {
   camera_config_t config;
@@ -42,7 +48,7 @@ void SetupCamera() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_UXGA;
+  config.frame_size = FRAMESIZE_HVGA;
   config.pixel_format = PIXFORMAT_JPEG;
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
@@ -50,19 +56,12 @@ void SetupCamera() {
   config.fb_count = 1;
   if (config.pixel_format == PIXFORMAT_JPEG) {
     if (psramFound()) {
-      config.jpeg_quality = 10;
+      config.jpeg_quality = 3;
       config.fb_count = 2;
       config.grab_mode = CAMERA_GRAB_LATEST;
-    } else {
-      config.frame_size = FRAMESIZE_SVGA;
-      config.fb_location = CAMERA_FB_IN_DRAM;
     }
-  } else {
-    config.frame_size = FRAMESIZE_240X240;
-#if CONFIG_IDF_TARGET_ESP32S3
-    config.fb_count = 2;
-#endif
   }
+
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
@@ -70,22 +69,26 @@ void SetupCamera() {
   }
 }
 
-String takePhoto() {
-  camera_fb_t *fb = esp_camera_fb_get();
-  if (!fb) {
-    Serial.println("Failed to get camera frame buffer");
-    return "";
+void setup() {
+  Serial.begin(115200);
+  Serial.println();
+  SetupCamera();
+  SetupMotorDriver();
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  startCameraServer();
 
-  if (fb->format != PIXFORMAT_JPEG) {
-    esp_camera_fb_return(fb);
-    return "";
-  }
+  Serial.print("Camera Ready! Use 'http://");
+  Serial.print(WiFi.localIP());
+  WiFiAddr = WiFi.localIP().toString();
+  Serial.println("' to connect");
+}
 
-  // Encode image data as Base64
-  String imageBase64 = base64::encode(fb->buf, fb->len);
-  Serial.println("Base64 Image String:");
-  Serial.println(imageBase64);
-  esp_camera_fb_return(fb);
-  return imageBase64;
+void loop() {
+  // put your main code here, to run repeatedly:
 }
