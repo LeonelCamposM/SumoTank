@@ -305,6 +305,36 @@ static esp_err_t index_handler(httpd_req_t *req) {
     </div>
 
     <script>
+let isRequestInProgress = false; // Variable para rastrear si una solicitud está en curso
+
+  document.addEventListener('keydown', function(event) {
+    if (!isRequestInProgress) {
+      switch(event.key) {
+        case 'w': // Tecla 'w' para 'forward'
+          sendRequest('/forward');
+          break;
+        case 'a': // Tecla 'a' para 'left'
+          sendRequest('/left');
+          break;
+        case 's': // Tecla 's' para 'backward'
+          sendRequest('/backward');
+          break;
+        case 'd': // Tecla 'd' para 'right'
+          sendRequest('/right');
+          break;
+      }
+      if (['w', 'a', 's', 'd'].includes(event.key)) {
+        isRequestInProgress = true; // Establece que hay una solicitud en curso
+      }
+    }
+  });
+
+  document.addEventListener('keyup', function(event) {
+    if (['w', 'a', 's', 'd'].includes(event.key)) {
+      sendRequest('/stop');
+      isRequestInProgress = false; // Restablece el estado cuando se suelta la tecla
+    }
+  });
       function sendRequest(url, event) {
         if (event) {
           event.preventDefault();
