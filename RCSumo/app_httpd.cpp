@@ -33,11 +33,11 @@ void stopMovement();
 void WheelAct(int nLf, int nLb, int nRf, int nRb);
 
 typedef struct {
-  size_t size;   
-  size_t index;  
-  size_t count;  
+  size_t size;
+  size_t index;
+  size_t count;
   int sum;
-  int *values;  
+  int *values;
 } ra_filter_t;
 
 typedef struct {
@@ -165,20 +165,161 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 
 static esp_err_t index_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "text/html");
-  String page = "";
-  page += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0\">\n";
-  page += "<script>var xhttp = new XMLHttpRequest();</script>";
-  page += "<script>function getsend(arg) { xhttp.open('GET', arg +'?' + new Date().getTime(), true); xhttp.send() } </script>";
-  page += "<p align=center><IMG SRC='http://" + WiFiAddr + ":81/stream' style='width:300px;'></p><br/><br/>";
+  String page = R"html(
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>ESP32 HTTP Control y Visualización de Imágenes</title>
+    <style>
+         body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 10px;
+      }
+      #image-container {
+        width: 80%;
+        max-width: 400px;
+        margin: 20px auto;
+      }
+      #image {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+      .btn-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        max-width: 300px;
+        margin: auto;
+      }
+      .row {
+        display: flex;
+        justify-content: center;
+        margin: 10px 0;
+      }
+      .btn {
+        width: 80px;
+        height: 80px;
+        font-size: 16px;
+        background-color: #3498db;
+        color: #ffffff;
+        border: none;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: background-color 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 10px;
+      }
+      .btn:hover {
+        background-color: #2980b9;
+      }
+      .btn-big {
+        width: 100px;
+        height: 100px;
+        font-size: 18px;
+      }
+      @media (max-width: 600px) {
+        .btn-container {
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: space-around;
+        }
+        .row {
+          flex-basis: 100%;
+          justify-content: space-around;
+          margin: 10px 0;
+        }
+        .btn,
+        .btn-big {
+          width: 70px;
+          height: 70px;
+          font-size: 14px;
+          margin: 5px;
+        }
+        .btn-big {
+          width: 90px;
+          height: 90px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Control del ESP32</h2>
+)html";
+  page += "<p align='center'><img src='http://" + WiFiAddr + ":81/stream' style='width:300px;'></p><br/><br/>";
+  page += R"html(
+   
+    <div class="btn-container">
+      <div class="row">
+        <button
+          class="btn"
+          id="forward"
+          ontouchstart="sendRequest('/forward', event)"
+          ontouchend="sendRequest('/stop', event)"
+        >
+          forward
+        </button>
+      </div>
+      <div class="row">
+        <button
+          class="btn btn-big"
+          id="left"
+          ontouchstart="sendRequest('/left', event)"
+          ontouchend="sendRequest('/stop', event)"
+        >
+          left
+        </button>
+        <button class="btn" id="stop" onclick="sendRequest('/stop', event)">
+          stop
+        </button>
+        <button
+          class="btn btn-big"
+          id="right"
+          ontouchstart="sendRequest('/right', event)"
+          ontouchend="sendRequest('/stop', event)"
+        >
+          right
+        </button>
+      </div>
+      <div class="row">
+        <button
+          class="btn"
+          id="backward"
+          ontouchstart="sendRequest('/backward', event)"
+          ontouchend="sendRequest('/stop', event)"
+        >
+          backward
+        </button>
+      </div>
+    </div>
 
-  page += "<p align=center> <button style=background-color:lightgrey;width:90px;height:80px onmousedown=getsend('go') onmouseup=getsend('stop') ontouchstart=getsend('go') ontouchend=getsend('stop') ><b>Forward</b></button> </p>";
-  page += "<p align=center>";
-  page += "<button style=background-color:lightgrey;width:90px;height:80px; onmousedown=getsend('left') onmouseup=getsend('stop') ontouchstart=getsend('left') ontouchend=getsend('stop')><b>Left</b></button>&nbsp;";
-  page += "<button style=background-color:indianred;width:90px;height:80px onmousedown=getsend('stop') onmouseup=getsend('stop')><b>Stop</b></button>&nbsp;";
-  page += "<button style=background-color:lightgrey;width:90px;height:80px onmousedown=getsend('right') onmouseup=getsend('stop') ontouchstart=getsend('right') ontouchend=getsend('stop')><b>Right</b></button>";
-  page += "</p>";
-
-  page += "<p align=center><button style=background-color:lightgrey;width:90px;height:80px onmousedown=getsend('back') onmouseup=getsend('stop') ontouchstart=getsend('back') ontouchend=getsend('stop') ><b>Backward</b></button></p>";
+    <script>
+      function sendRequest(url, event) {
+        if (event) {
+          event.preventDefault();
+        }
+        if ("vibrate" in navigator) {
+          navigator.vibrate(200);
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.send();
+      }
+    </script>
+  </body>
+</html>
+)html";
   return httpd_resp_send(req, &page[0], strlen(&page[0]));
 }
 
@@ -219,14 +360,14 @@ void startCameraServer() {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
   httpd_uri_t go_uri = {
-    .uri = "/go",
+    .uri = "/forward",
     .method = HTTP_GET,
     .handler = go_handler,
     .user_ctx = NULL
   };
 
   httpd_uri_t back_uri = {
-    .uri = "/back",
+    .uri = "/backward",
     .method = HTTP_GET,
     .handler = back_handler,
     .user_ctx = NULL
