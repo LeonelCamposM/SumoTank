@@ -17,11 +17,6 @@
 #include "img_converters.h"
 #include "Arduino.h"
 
-extern int gpLb;
-extern int gpLf;
-extern int gpRb;
-extern int gpRf;
-extern int gpLed;
 extern String WiFiAddr;
 
 void goForward();
@@ -29,8 +24,6 @@ void goBackward();
 void goRight();
 void goLeft();
 void stopMovement();
-
-void WheelAct(int nLf, int nLb, int nRf, int nRb);
 
 typedef struct {
   size_t size;

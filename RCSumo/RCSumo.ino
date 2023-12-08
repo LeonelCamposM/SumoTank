@@ -1,8 +1,13 @@
 
 #include "esp_camera.h"
 #include <WiFi.h>
-const char* ssid = "ARRIS-3952";
-const char* password = "Ottis2315";  //Enter WIFI Password
+const char* ssid = "xiaoCar";
+const char* password = "12345xiao";  //Enter WIFI Password
+
+// Static IP configuration for the soft AP
+IPAddress local_IP(192, 168, 4, 1);
+IPAddress gateway(192, 168, 4, 1);
+IPAddress subnet(255, 255, 255, 0);
 
 #define CAMERA_MODEL_XIAO_ESP32S3
 #define PWDN_GPIO_NUM -1
@@ -74,18 +79,19 @@ void setup() {
   Serial.println();
   SetupCamera();
   SetupMotorDriver();
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
+  
+  // Configure the soft AP with a static IP address
+  WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAP(ssid, password);
+
+  Serial.print("AP IP address: ");
+  Serial.println(local_IP);
+
   startCameraServer();
 
   Serial.print("Camera Ready! Use 'http://");
-  Serial.print(WiFi.localIP());
-  WiFiAddr = WiFi.localIP().toString();
+  Serial.print(local_IP);
+  WiFiAddr = local_IP.toString();
   Serial.println("' to connect");
 }
 
